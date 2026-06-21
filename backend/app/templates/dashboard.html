@@ -1,0 +1,1697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>State-Driven Agentic OS Console</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        background: "#080c14",
+                        panel: "#0e1626",
+                        border: "#1e293b",
+                        ink: "#f8fafc",
+                        inkMuted: "#94a3b8",
+                        accentSky: "#38bdf8",
+                        accentEmerald: "#10b981",
+                        accentRose: "#f43f5e",
+                        accentAmber: "#f59e0b",
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #070a13;
+            color: #f1f5f9;
+            letter-spacing: -0.015em;
+            line-height: 1.6;
+        }
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        /* Modern Glass Panel & Cards */
+        .glass-panel {
+            background: rgba(14, 22, 38, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .interactive-card {
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .interactive-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(56, 189, 248, 0.35);
+            box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.6), 0 0 15px 0 rgba(56, 189, 248, 0.08);
+        }
+        
+        /* Inputs & Form Controls */
+        input, select, textarea {
+            background-color: #04060b !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            color: #f1f5f9 !important;
+            outline: none;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: #38bdf8 !important;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+        }
+        input::placeholder, textarea::placeholder {
+            color: #475569 !important;
+        }
+
+        /* Custom scrollbar */
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #04060b;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 9999px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Keyframes & Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .tab-content-active {
+            animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes pulseConcentric {
+            0% {
+                box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.3), 0 0 0 1px rgba(56, 189, 248, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(56, 189, 248, 0), 0 0 15px 4px rgba(56, 189, 248, 0.3);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(56, 189, 248, 0), 0 0 0 1px rgba(56, 189, 248, 0.2);
+            }
+        }
+        .pulse-halo-sky {
+            animation: pulseConcentric 2.2s infinite ease-in-out;
+        }
+
+        @keyframes pulseConcentricAmber {
+            0% {
+                box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.3), 0 0 0 1px rgba(245, 158, 11, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(245, 158, 11, 0), 0 0 15px 4px rgba(245, 158, 11, 0.3);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(245, 158, 11, 0), 0 0 0 1px rgba(245, 158, 11, 0.2);
+            }
+        }
+        .pulse-halo-amber {
+            animation: pulseConcentricAmber 2.2s infinite ease-in-out;
+        }
+
+        @keyframes pulseConcentricEmerald {
+            0% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.3), 0 0 0 1px rgba(16, 185, 129, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0), 0 0 15px 4px rgba(16, 185, 129, 0.3);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0), 0 0 0 1px rgba(16, 185, 129, 0.2);
+            }
+        }
+        .pulse-halo-emerald {
+            animation: pulseConcentricEmerald 2.2s infinite ease-in-out;
+        }
+
+        @keyframes modalOpen {
+            from {
+                opacity: 0;
+                transform: scale(0.96) translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        .animate-modal-open {
+            animation: modalOpen 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(16px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        .animate-slide-in {
+            animation: slideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Certificate Styling */
+        .cert-glow-border {
+            position: relative;
+            background: linear-gradient(135deg, #d97706 0%, #fef08a 50%, #d97706 100%);
+            padding: 3px;
+            border-radius: 1rem;
+            box-shadow: 0 20px 50px rgba(217, 119, 6, 0.15);
+        }
+        
+        /* Modern Button Styling */
+        .btn-modern {
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-modern::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.08);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .btn-modern:hover::after {
+            opacity: 1;
+        }
+        .btn-modern:active {
+            transform: scale(0.97);
+        }
+    </style>
+</head>
+<body class="min-h-screen p-6 md:p-10 relative overflow-x-hidden">
+    <!-- Ambient Light blobs for premium dashboard feeling -->
+    <div class="fixed top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-blue-600/10 blur-[120px] pointer-events-none z-[-1]"></div>
+    <div class="fixed bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-indigo-600/10 blur-[120px] pointer-events-none z-[-1]"></div>
+    <div class="fixed top-[40%] right-[15%] w-[30vw] h-[30vw] rounded-full bg-purple-600/5 blur-[100px] pointer-events-none z-[-1]"></div>
+
+    <div class="max-w-7xl mx-auto space-y-8 relative z-10">
+        
+        <!-- Unstop-style Hackathon Hero Card -->
+        <div class="bg-gradient-to-br from-[#101b35] via-[#0e1626] to-[#080d19] rounded-2xl p-6 md:p-8 border border-blue-500/20 text-white relative overflow-hidden shadow-2xl shadow-blue-950/20">
+            <!-- Decorative light stripe -->
+            <div class="absolute -inset-px bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-2xl pointer-events-none"></div>
+            
+            <div class="absolute right-0 top-0 opacity-15 pointer-events-none transform translate-x-12 -translate-y-12">
+                <svg class="w-96 h-96 text-blue-500" fill="currentColor" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40"></circle></svg>
+            </div>
+            
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative z-10">
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="bg-amber-400 text-slate-900 font-extrabold text-[10px] px-2.5 py-1 rounded-md uppercase tracking-wider shadow shadow-amber-400/20">Featured</span>
+                        <span class="bg-emerald-500 text-white font-extrabold text-[10px] px-2.5 py-1 rounded-md uppercase tracking-wider shadow shadow-emerald-500/20 flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                            Live & Active
+                        </span>
+                        <span class="bg-white/10 text-slate-300 font-semibold text-[10px] px-2.5 py-1 rounded-md uppercase tracking-wider font-mono border border-white/5">Agentic OS Console</span>
+                    </div>
+                    <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-blue-200">
+                        Dell Future Minds AI Hackathon 2026
+                    </h1>
+                    <p class="text-slate-300 text-xs md:text-sm max-w-2xl leading-relaxed">
+                        Autonomous agentic pipeline orchestrating duplicate checks via DBSCAN vectors, expert matches with multi-objective Hungarian optimization solvers, and real-time score bias calibration.
+                    </p>
+                </div>
+                <div class="flex flex-wrap items-center gap-3 lg:self-end">
+                    <button onclick="seedInitialData()" class="btn-modern px-5 py-2.5 bg-white text-blue-700 hover:bg-slate-50 hover:shadow-lg hover:shadow-white/5 rounded-xl text-xs font-bold shadow-md">
+                        Seed Demo Data
+                    </button>
+                    <button onclick="showWinnerModal()" class="btn-modern px-5 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 hover:from-amber-350 hover:to-amber-450 hover:shadow-lg hover:shadow-amber-500/20 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md">
+                        🏆 Winner Certificate
+                    </button>
+                    <button onclick="fetchData()" class="btn-modern px-5 py-2.5 bg-blue-900/60 text-white hover:bg-blue-800/80 border border-blue-700/50 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3 3L22 4"></path></svg>
+                        Sync Data
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Unstop-style Navigation Tabs -->
+        <div class="bg-[#05080f]/80 border border-white/[0.05] p-1.5 rounded-xl flex gap-2 overflow-x-auto custom-scroll shadow-inner">
+            <button onclick="switchTab('tab-dashboard')" id="btn-tab-dashboard" class="tab-btn px-4 py-2 rounded-lg text-xs font-semibold tracking-wide transition-all duration-300 flex items-center gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20 font-bold whitespace-nowrap">
+                💻 Event Center
+            </button>
+            <button onclick="switchTab('tab-analytics')" id="btn-tab-analytics" class="tab-btn px-4 py-2 rounded-lg text-xs font-semibold tracking-wide transition-all duration-300 flex items-center gap-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 whitespace-nowrap">
+                📊 D&I & Bias Analytics
+            </button>
+            <button onclick="switchTab('tab-skills')" id="btn-tab-skills" class="tab-btn px-4 py-2 rounded-lg text-xs font-semibold tracking-wide transition-all duration-300 flex items-center gap-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 whitespace-nowrap">
+                🤝 Team Matching & Skill Gaps
+            </button>
+            <button onclick="switchTab('tab-registry')" id="btn-tab-registry" class="tab-btn px-4 py-2 rounded-lg text-xs font-semibold tracking-wide transition-all duration-300 flex items-center gap-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 whitespace-nowrap">
+                📁 Submissions Database
+            </button>
+            <button onclick="switchTab('tab-portal')" id="btn-tab-portal" class="tab-btn px-4 py-2 rounded-lg text-xs font-semibold tracking-wide transition-all duration-300 flex items-center gap-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 whitespace-nowrap">
+                📝 Portal Simulator
+            </button>
+            <button onclick="switchTab('tab-results')" id="btn-tab-results" class="tab-btn px-4 py-2 rounded-lg text-xs font-semibold tracking-wide transition-all duration-300 flex items-center gap-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 whitespace-nowrap">
+                🏆 Winner & Results Center
+            </button>
+        </div>
+
+        <!-- TAB 1: Event Center -->
+        <div id="tab-dashboard" class="tab-content space-y-8">
+            <!-- Active State Pipeline Stepper -->
+            <section class="glass-panel rounded-2xl p-6 space-y-6">
+                <div class="flex justify-between items-center border-b border-white/[0.05] pb-3">
+                    <h2 class="text-sm font-bold text-white tracking-wide uppercase">Active State Pipeline</h2>
+                    <div id="active-project-label" class="text-xs text-accentSky font-mono font-semibold">No active execution state</div>
+                </div>
+                
+                <div class="relative flex flex-col md:flex-row justify-between items-center gap-8 md:gap-4 md:px-6 pt-4">
+                    <!-- Background Connection Line -->
+                    <div class="absolute top-1/2 left-0 right-0 h-0.5 bg-white/[0.08] -translate-y-1/2 hidden md:block z-0"></div>
+                    <div id="pipeline-progress-line" class="absolute top-1/2 left-0 h-0.5 bg-gradient-to-r from-blue-500 to-accentSky -translate-y-1/2 hidden md:block z-0 transition-all duration-500" style="width: 0%;"></div>
+ 
+                    <!-- Step 1: Ingress -->
+                    <div id="step-1" class="relative z-10 flex flex-col items-center text-center space-y-3 group">
+                        <div class="w-10 h-10 rounded-full bg-[#04060b] border border-white/[0.12] flex items-center justify-center text-xs font-bold text-slate-400 transition-all duration-300">1</div>
+                        <div>
+                            <p class="text-xs font-bold text-white">Project Registry</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Ingress Submission</p>
+                        </div>
+                    </div>
+ 
+                    <!-- Step 2: DBSCAN -->
+                    <div id="step-2" class="relative z-10 flex flex-col items-center text-center space-y-3 group">
+                        <div class="w-10 h-10 rounded-full bg-[#04060b] border border-white/[0.12] flex items-center justify-center text-xs font-bold text-slate-400 transition-all duration-300">2</div>
+                        <div>
+                            <p class="text-xs font-bold text-white">Plagiarism Audit</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">DBSCAN Vectoring</p>
+                        </div>
+                    </div>
+ 
+                    <!-- Step 3: HITL -->
+                    <div id="step-3" class="relative z-10 flex flex-col items-center text-center space-y-3 group">
+                        <div class="w-10 h-10 rounded-full bg-[#04060b] border border-white/[0.12] flex items-center justify-center text-xs font-bold text-slate-400 transition-all duration-300">3</div>
+                        <div>
+                            <p class="text-xs font-bold text-white">HITL Verification</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Override / Disqualify</p>
+                        </div>
+                    </div>
+ 
+                    <!-- Step 4: Hungarian Matching -->
+                    <div id="step-4" class="relative z-10 flex flex-col items-center text-center space-y-3 group">
+                        <div class="w-10 h-10 rounded-full bg-[#04060b] border border-white/[0.12] flex items-center justify-center text-xs font-bold text-slate-400 transition-all duration-300">4</div>
+                        <div>
+                            <p class="text-xs font-bold text-white">Optimal Match</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Hungarian Solver</p>
+                        </div>
+                    </div>
+ 
+                    <!-- Step 5: Scoring Normalization -->
+                    <div id="step-5" class="relative z-10 flex flex-col items-center text-center space-y-3 group">
+                        <div class="w-10 h-10 rounded-full bg-[#04060b] border border-white/[0.12] flex items-center justify-center text-xs font-bold text-slate-400 transition-all duration-300">5</div>
+                        <div>
+                            <p class="text-xs font-bold text-white">Score Calibration</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Z-Score Normalizer</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+ 
+            <!-- HITL Intervention Section -->
+            <div id="hitl-banner" class="hidden bg-amber-500/[0.04] border border-amber-500/30 rounded-2xl p-6 space-y-4 shadow-lg shadow-amber-500/5">
+                <div class="flex items-center gap-2.5 text-amber-400 font-bold">
+                    <svg class="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    <h3 class="text-base font-bold tracking-tight">Human Intervention Required: Potential Duplicates Detected</h3>
+                </div>
+                <div id="hitl-list" class="divide-y divide-white/[0.06] bg-[#04060b] rounded-xl border border-white/[0.08] overflow-hidden shadow-inner">
+                    <!-- Dynamic Items -->
+                </div>
+            </div>
+ 
+            <!-- Terminal Section -->
+            <div class="glass-panel rounded-2xl p-6 flex flex-col h-[500px]">
+                <div class="flex items-center justify-between pb-3 border-b border-white/[0.05] mb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+                        <h2 class="text-sm font-bold text-white tracking-wide uppercase">Autonomous Log Stream</h2>
+                    </div>
+                    <button onclick="clearLogs()" class="text-xs text-slate-400 hover:text-white transition font-medium">Clear Terminal</button>
+                </div>
+                <div id="logs-container" class="flex-1 overflow-y-auto bg-[#04060b] p-4 rounded-xl border border-white/[0.04] mono text-xs text-emerald-400 space-y-2.5 custom-scroll leading-relaxed shadow-inner">
+                    <div>[System] Establishing real-time event log pipeline...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: D&I & Bias Analytics -->
+        <div id="tab-analytics" class="tab-content hidden space-y-8">
+            <!-- Analytics Dashboard Metrics (KPIs) -->
+            <section class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div class="glass-panel rounded-2xl p-5 space-y-2 interactive-card shadow-lg">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Teams</p>
+                    <p id="kpi-total-teams" class="text-3xl font-extrabold text-white tracking-tight">0</p>
+                </div>
+                <div class="glass-panel rounded-2xl p-5 space-y-2 interactive-card shadow-lg">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Active Judges</p>
+                    <p id="kpi-active-judges" class="text-3xl font-extrabold text-white tracking-tight">3</p>
+                </div>
+                <div class="glass-panel rounded-2xl p-5 space-y-2 interactive-card shadow-lg">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Plagiarism Alerts</p>
+                    <p id="kpi-plagiarism-alerts" class="text-3xl font-extrabold text-accentRose tracking-tight">0</p>
+                </div>
+                <div class="glass-panel rounded-2xl p-5 space-y-2 interactive-card shadow-lg">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Avg Completion Health</p>
+                    <p id="kpi-success-health" class="text-3xl font-extrabold text-accentEmerald tracking-tight">0.0%</p>
+                </div>
+            </section>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Leaderboard Section -->
+                <div class="lg:col-span-6 glass-panel rounded-2xl p-6 flex flex-col h-[450px] shadow-xl">
+                    <div class="pb-3 border-b border-white/[0.05] mb-4 flex justify-between items-center">
+                        <h2 class="text-sm font-bold text-white uppercase tracking-wide">Score Leaderboard</h2>
+                        <span class="text-[10px] text-accentSky font-bold bg-accentSky/10 px-2.5 py-0.5 rounded border border-accentSky/20 uppercase tracking-wider font-mono">Z-Score Calibration</span>
+                    </div>
+                    <div id="leaderboard-container" class="flex-1 overflow-y-auto space-y-3 custom-scroll pr-1">
+                        <!-- Dynamic List -->
+                    </div>
+                </div>
+
+                <!-- D&I Metrics -->
+                <div class="lg:col-span-6 glass-panel rounded-2xl p-6 flex flex-col h-[450px] shadow-xl">
+                    <div class="pb-3 border-b border-white/[0.05] mb-4 flex justify-between items-center">
+                        <h2 class="text-sm font-bold text-white uppercase tracking-wide">Diversity & Inclusion Analytics</h2>
+                        <span class="text-[10px] text-accentRose font-bold bg-accentRose/10 px-2.5 py-0.5 rounded border border-accentRose/20 uppercase tracking-wider">D&I Monitoring</span>
+                    </div>
+                    <div class="flex-1 overflow-y-auto space-y-4 pr-1 custom-scroll text-xs">
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-slate-300 font-medium">D&I Fairness Health:</span>
+                            <span id="dni-fairness-health" class="text-accentEmerald font-extrabold text-sm">100%</span>
+                        </div>
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-slate-300 font-medium">Gender Diversity Ratio:</span>
+                            <span id="dni-gender-ratio" class="text-white font-semibold">0.0%</span>
+                        </div>
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-slate-300 font-medium">Geographic Inclusivity:</span>
+                            <span id="dni-geo-ratio" class="text-white font-semibold">0.0%</span>
+                        </div>
+                        <div class="border-t border-white/[0.05] pt-3 space-y-2">
+                            <p class="font-bold text-slate-400 uppercase tracking-wide text-[10px]">D&I Bias Alert Trail:</p>
+                            <div id="dni-alerts-container" class="space-y-2 max-h-[220px] overflow-y-auto custom-scroll text-[10px]">
+                                <!-- Dynamic Alerts -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: Team Matching & Skill Gaps -->
+        <div id="tab-skills" class="tab-content hidden space-y-8">
+            <!-- Team Formation & Skill Assistance -->
+            <div class="glass-panel rounded-2xl p-6 flex flex-col min-h-[450px] shadow-xl">
+                <div class="pb-3 border-b border-white/[0.05] mb-4 flex justify-between items-center">
+                    <h2 class="text-sm font-bold text-white uppercase tracking-wide">AI Skill-Based Team Formation Assistance</h2>
+                    <span class="text-[10px] text-accentEmerald font-bold bg-accentEmerald/10 px-2.5 py-0.5 rounded border border-accentEmerald/20 uppercase tracking-wider">Skill Gap Analysis</span>
+                </div>
+                <div id="team-formation-container" class="space-y-4 text-xs pr-1 overflow-y-auto custom-scroll max-h-[500px]">
+                    <!-- Dynamic recommendations -->
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: Submissions Database -->
+        <div id="tab-registry" class="tab-content hidden space-y-8">
+            <!-- Registry Table -->
+            <section class="glass-panel rounded-2xl p-6 shadow-2xl">
+                <h2 class="text-sm font-bold border-b border-white/[0.05] pb-3 mb-4 text-white uppercase tracking-wide">Registry Submission List</h2>
+                <div class="overflow-x-auto custom-scroll">
+                    <table class="w-full text-left text-sm border-collapse min-w-[700px]">
+                        <thead>
+                            <tr class="border-b border-white/[0.08] text-[10px] uppercase tracking-wider text-slate-400 font-bold">
+                                <th class="py-3 px-4">ID</th>
+                                <th class="py-3 px-4">Project Title & Extracted Skills</th>
+                                <th class="py-3 px-4">Description Abstract</th>
+                                <th class="py-3 px-4">Tech Stack & Analytics</th>
+                                <th class="py-3 px-4">Status State & Assets</th>
+                            </tr>
+                        </thead>
+                        <tbody id="registry-rows" class="divide-y divide-white/[0.04] text-slate-200">
+                            <!-- Dynamic Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <!-- TAB 5: Portal Simulator -->
+        <div id="tab-portal" class="tab-content hidden space-y-8">
+            <!-- Simulation Forms Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                
+                <!-- Submit Form -->
+                <div class="glass-panel rounded-2xl p-6 space-y-5 shadow-xl">
+                    <h2 class="text-sm font-bold border-b border-white/[0.05] pb-3 text-accentEmerald uppercase tracking-wide">Submit Project Abstract</h2>
+                    <form id="submission-form" onsubmit="submitProject(event)" class="space-y-4">
+                        <div class="grid grid-cols-3 gap-4">
+                            <div class="col-span-1">
+                                <label class="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Team ID</label>
+                                <input type="number" id="sub-team-id" value="101" class="w-full rounded-xl px-3.5 py-2 text-sm" required>
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Project Title</label>
+                                <input type="text" id="sub-title" placeholder="Decentralized Database Router" class="w-full rounded-xl px-3.5 py-2 text-sm" required>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Abstract Description</label>
+                            <textarea id="sub-abstract" rows="4" placeholder="Describe the system architecture, execution goals, and matching requirements..." class="w-full rounded-xl px-3.5 py-2 text-sm leading-relaxed" required></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Tech Stack</label>
+                            <input type="text" id="sub-tech" value="Spring Boot, FastAPI, pgvector, SciPy" class="w-full rounded-xl px-3.5 py-2 text-sm" required>
+                        </div>
+                        <button type="submit" class="btn-modern w-full py-3 bg-accentEmerald hover:bg-emerald-450 rounded-xl text-xs font-bold text-slate-950 uppercase tracking-wider">
+                            Register Submission
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Score Form -->
+                <div class="glass-panel rounded-2xl p-6 space-y-5 shadow-xl">
+                    <h2 class="text-sm font-bold border-b border-white/[0.05] pb-3 text-accentAmber uppercase tracking-wide">Cast Judge Evaluation</h2>
+                    <form id="score-form" onsubmit="submitScore(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Evaluation Authority</label>
+                            <select id="score-judge-id" class="w-full rounded-xl px-3.5 py-2.5 text-sm">
+                                <option value="1">Judge 1 (Strict Hawk)</option>
+                                <option value="2">Judge 2 (Moderate)</option>
+                                <option value="3">Judge 3 (Lenient Dove)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Target Project</label>
+                            <select id="score-project-id" class="w-full rounded-xl px-3.5 py-2.5 text-sm" required>
+                                <!-- Dynamic options -->
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Raw Scoring Value (0 - 10)</label>
+                            <input type="number" id="score-raw" min="0" max="10" step="0.5" value="8" class="w-full rounded-xl px-3.5 py-2.5 text-sm" required>
+                        </div>
+                        <button type="submit" class="btn-modern w-full py-3 bg-accentAmber hover:bg-amber-450 rounded-xl text-xs font-bold text-slate-950 uppercase tracking-wider">
+                            Cast Score Evaluation
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- TAB 6: Winner & Results Center -->
+        <div id="tab-results" class="tab-content hidden space-y-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                
+                <!-- Evaluation Settings Card -->
+                <div class="lg:col-span-6 glass-panel rounded-2xl p-6 space-y-5 shadow-xl">
+                    <div class="flex justify-between items-center border-b border-white/[0.05] pb-3">
+                        <h2 class="text-sm font-bold text-white uppercase tracking-wide">Evaluation Settings</h2>
+                        <span id="eval-status-badge" class="bg-accentEmerald/10 text-accentEmerald border border-accentEmerald/20 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">Scoring Open</span>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <!-- Toggle Status -->
+                        <div class="flex items-center justify-between bg-[#04060b] p-4 rounded-xl border border-white/[0.06] shadow-inner">
+                            <div>
+                                <h4 class="text-xs font-bold text-white">Evaluation Closed Status</h4>
+                                <p class="text-[10px] text-slate-400 mt-1 leading-normal">Locks scoring and enables winner certificate generation.</p>
+                            </div>
+                            <button id="btn-toggle-eval" onclick="toggleEvaluationStatus()" class="btn-modern px-3.5 py-2 bg-accentRose text-slate-950 hover:bg-rose-450 rounded-lg text-xs font-bold shadow-md">
+                                Close Evaluations
+                            </button>
+                        </div>
+                        
+                        <!-- Criteria weights form -->
+                        <div class="space-y-3">
+                            <h4 class="text-xs font-bold text-slate-300">Configurable Evaluation Criteria Weights</h4>
+                            <div class="space-y-2.5" id="criteria-weights-container">
+                                <!-- Dynamic inputs -->
+                            </div>
+                            <button onclick="saveCriteriaWeights()" class="btn-modern w-full py-2.5 bg-accentSky hover:bg-sky-450 rounded-lg text-xs font-bold text-slate-950 uppercase tracking-wider">
+                                Save Criteria Configuration
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Blockchain Ledger Verification Card -->
+                <div class="lg:col-span-6 glass-panel rounded-2xl p-6 space-y-5 shadow-xl">
+                    <div class="flex justify-between items-center border-b border-white/[0.05] pb-3">
+                        <h2 class="text-sm font-bold text-white uppercase tracking-wide">Blockchain Audit Trail</h2>
+                        <span id="ledger-health-badge" class="bg-accentEmerald/10 text-accentEmerald border border-accentEmerald/20 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider font-mono font-semibold">Chain Verified</span>
+                    </div>
+                    
+                    <div class="space-y-4 flex flex-col justify-between h-[calc(100%-40px)]">
+                        <div class="space-y-3">
+                            <p class="text-xs text-slate-300 leading-relaxed">
+                                Every score submission, matching step, and override is recorded as a block cryptographically linked to the previous entry using SHA-256 hashes.
+                            </p>
+                            <div class="bg-[#04060b] p-4 rounded-xl border border-white/[0.06] space-y-2.5 text-xs font-mono shadow-inner">
+                                <div class="flex justify-between">
+                                    <span class="text-slate-400">Ledger Integrity:</span>
+                                    <span id="ledger-status" class="text-accentEmerald font-bold">SECURE & HEALTHY</span>
+                                </div>
+                                <div class="flex justify-between border-t border-white/[0.04] pt-2">
+                                    <span class="text-slate-400">Verified Blocks:</span>
+                                    <span id="ledger-blocks" class="text-white font-bold">0</span>
+                                </div>
+                            </div>
+                            <div id="ledger-verification-output" class="text-[10px] text-accentRose space-y-1.5 max-h-[80px] overflow-y-auto pr-1 custom-scroll font-mono">
+                                <!-- Validation logs -->
+                            </div>
+                        </div>
+                        <button onclick="runLedgerVerification()" class="btn-modern w-full py-2.5 bg-white text-blue-700 hover:bg-slate-50 rounded-lg text-xs font-bold shadow-md">
+                            🔒 Verify Audit Trail Integrity
+                        </button>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                
+                <!-- Leaderboard with Confidence & Tie Breakers -->
+                <div class="lg:col-span-6 glass-panel rounded-2xl p-6 flex flex-col h-[500px] shadow-xl">
+                    <div class="pb-3 border-b border-white/[0.05] mb-4 flex justify-between items-center">
+                        <h2 class="text-sm font-bold text-white uppercase tracking-wide">Transparent Leaderboard Standings</h2>
+                        <span class="text-[10px] text-accentSky font-bold bg-accentSky/10 px-2.5 py-0.5 rounded border border-accentSky/20 uppercase tracking-wider font-mono">Statistical Confidence</span>
+                    </div>
+                    <div id="results-leaderboard-container" class="flex-1 overflow-y-auto space-y-3 custom-scroll pr-1">
+                        <!-- Dynamic Leaderboard Items -->
+                    </div>
+                </div>
+                
+                <!-- Personalized Feedback Report -->
+                <div class="lg:col-span-6 glass-panel rounded-2xl p-6 flex flex-col h-[500px] shadow-xl">
+                    <div class="pb-3 border-b border-white/[0.05] mb-4 flex justify-between items-center">
+                        <h2 class="text-sm font-bold text-white uppercase tracking-wide">Personalized AI Participant Feedback</h2>
+                        <span class="text-[10px] text-accentAmber font-bold bg-accentAmber/10 px-2.5 py-0.5 rounded border border-accentAmber/20 uppercase tracking-wider font-mono">Natural Language Generation</span>
+                    </div>
+                    
+                    <div class="space-y-4 flex flex-col h-[calc(100%-40px)]">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Select Project Submission</label>
+                            <select id="feedback-project-select" onchange="fetchProjectFeedback()" class="w-full rounded-xl px-3.5 py-2 text-sm">
+                                <option value="">-- Select Project --</option>
+                            </select>
+                        </div>
+                        
+                        <div id="feedback-report-container" class="flex-1 overflow-y-auto bg-[#04060b] border border-white/[0.06] p-4 rounded-xl text-xs leading-relaxed space-y-4 pr-1 custom-scroll shadow-inner">
+                            <p class="text-slate-400 italic text-center pt-8">Select a project to generate and audit its detailed feedback report.</p>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <!-- Multi-Channel Announcement Hub -->
+            <div class="glass-panel rounded-2xl p-6 space-y-5 shadow-2xl">
+                <div class="flex justify-between items-center border-b border-white/[0.05] pb-3">
+                    <h2 class="text-sm font-bold text-white uppercase tracking-wide">Multi-Channel Winner Announcement Hub</h2>
+                    <span class="text-[10px] text-accentSky font-bold bg-accentSky/10 px-2.5 py-0.5 rounded border border-accentSky/20 uppercase tracking-wider font-mono">Distribution templates</span>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 pb-2">
+                    <button onclick="switchAnnouncementTab('email')" id="btn-ann-email" class="btn-modern ann-tab-btn py-2 bg-blue-900 border border-blue-700 text-white font-bold text-xs rounded-lg flex items-center justify-center gap-1.5 shadow">
+                        📧 Email Newsletter
+                    </button>
+                    <button onclick="switchAnnouncementTab('slack')" id="btn-ann-slack" class="btn-modern ann-tab-btn py-2 bg-[#04060b] border border-white/[0.08] text-slate-400 hover:text-slate-200 font-bold text-xs rounded-lg flex items-center justify-center gap-1.5">
+                        💬 Slack Announcement
+                    </button>
+                    <button onclick="switchAnnouncementTab('discord')" id="btn-ann-discord" class="btn-modern ann-tab-btn py-2 bg-[#04060b] border border-white/[0.08] text-slate-400 hover:text-slate-200 font-bold text-xs rounded-lg flex items-center justify-center gap-1.5">
+                        👾 Discord Broadcast
+                    </button>
+                    <button onclick="switchAnnouncementTab('twitter')" id="btn-ann-twitter" class="btn-modern ann-tab-btn py-2 bg-[#04060b] border border-white/[0.08] text-slate-400 hover:text-slate-200 font-bold text-xs rounded-lg flex items-center justify-center gap-1.5">
+                        🐦 Twitter/X Post
+                    </button>
+                </div>
+                
+                <div class="relative shadow-inner rounded-xl overflow-hidden border border-white/[0.06]">
+                    <pre id="announcement-content-box" class="bg-[#04060b] p-5 rounded-xl font-mono text-xs text-slate-200 whitespace-pre-wrap leading-relaxed overflow-y-auto max-h-[300px] custom-scroll"></pre>
+                    <button onclick="copyAnnouncementCopy()" class="btn-modern absolute top-3 right-3 px-3 py-1.5 bg-accentSky hover:bg-sky-450 text-slate-950 font-bold text-xs rounded-lg shadow-md transition">
+                        Copy to Clipboard
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modals -->
+    <!-- Winner Certificate Modal -->
+    <div id="winner-modal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-300 animate-fade-in">
+        <div class="glass-panel rounded-3xl max-w-xl w-full p-6 md:p-8 space-y-6 relative animate-modal-open shadow-2xl border border-white/[0.08]">
+            <button onclick="closeWinnerModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-2xl transition">&times;</button>
+            
+            <div id="winner-modal-content" class="space-y-6">
+                <!-- Certificate Template -->
+                <div class="cert-glow-border">
+                    <div class="bg-[#060a15] rounded-[14px] p-6 md:p-8 text-center space-y-5 relative overflow-hidden border border-white/[0.03] shadow-inner">
+                        <!-- Decorative background element -->
+                        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(217,119,6,0.04)_0%,transparent_70%)] pointer-events-none"></div>
+                        
+                        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/10 border border-amber-400/30 text-amber-400 text-[10px] font-bold uppercase tracking-wider mx-auto shadow shadow-amber-400/5">
+                            🏆 DELL AI MERIT AWARD
+                        </div>
+                        
+                        <h4 class="text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-200 tracking-tight uppercase">Certificate of Excellence</h4>
+                        <p class="text-xs text-slate-400 italic">This credential is proudly conferred to</p>
+                        
+                        <h2 id="cert-recipient" class="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-blue-400 to-indigo-400 tracking-wide my-1">Team ---</h2>
+                        
+                        <p class="text-xs text-slate-400 italic">for peerless prototype development of the project</p>
+                        <h3 id="cert-project" class="text-sm font-bold text-white tracking-normal leading-relaxed">"---"</h3>
+                        <p class="text-[11px] text-slate-300">Achieved Peak Standings via Bias-Calibrated Score: <span id="cert-score" class="text-accentEmerald font-bold font-mono">---</span></p>
+                        
+                        <div class="flex justify-between items-end pt-5 border-t border-white/[0.06] text-[10px] text-slate-400 font-mono">
+                            <div class="text-left space-y-1">
+                                <p class="text-[9px] uppercase tracking-wider text-slate-500 font-bold">Verification Hash</p>
+                                <p id="cert-hash" class="text-accentSky truncate max-w-[180px]">---</p>
+                            </div>
+                            <div class="text-right space-y-1">
+                                <p class="text-[9px] uppercase tracking-wider text-slate-500 font-bold">Issuing Authority</p>
+                                <p class="font-bold text-slate-200">Dell Agentic OS Engine</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Audit Trail -->
+                <div class="bg-[#04060b] border border-white/[0.06] p-4 rounded-2xl space-y-2.5 shadow-inner">
+                    <h4 class="text-[10px] font-bold text-white uppercase tracking-wider">Fairness Verification Audit Trail</h4>
+                    <p id="cert-audit-trail" class="text-slate-300 leading-relaxed font-mono text-[10px] bg-[#020408] p-3 rounded-xl border border-white/[0.03] overflow-x-auto max-h-[80px] custom-scroll">
+                        ---
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Asset Viewer Modal -->
+    <div id="assets-modal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-300">
+        <div class="glass-panel rounded-3xl max-w-2xl w-full p-6 md:p-8 space-y-6 relative animate-modal-open shadow-2xl border border-white/[0.08]">
+            <button onclick="closeAssetsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-2xl transition">&times;</button>
+            
+            <h3 class="text-sm font-bold text-white uppercase tracking-wide border-b border-white/[0.05] pb-3">Automated Communications & Marketing Copy</h3>
+            
+            <div class="space-y-5">
+                <!-- Welcome Email -->
+                <div class="space-y-2">
+                    <h4 class="text-[10px] font-bold text-accentEmerald uppercase tracking-wider">Personalized Welcome & Status Email</h4>
+                    <pre id="assets-email" class="bg-[#04060b] border border-white/[0.06] p-4 rounded-xl font-mono text-xs text-slate-200 whitespace-pre-wrap leading-relaxed overflow-y-auto max-h-[160px] custom-scroll shadow-inner"></pre>
+                </div>
+                
+                <!-- Social Promo -->
+                <div class="space-y-2">
+                    <h4 class="text-[10px] font-bold text-accentSky uppercase tracking-wider">Generated Promotional Social Pitch</h4>
+                    <pre id="assets-promo" class="bg-[#04060b] border border-white/[0.06] p-4 rounded-xl font-mono text-xs text-slate-200 whitespace-pre-wrap leading-relaxed overflow-y-auto max-h-[120px] custom-scroll shadow-inner"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripting Logic -->
+    <script>
+        const API_URL = "";
+
+        // Tab Switching Logic
+        function switchTab(tabId) {
+            // Hide all tab content
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('tab-content-active');
+            });
+            // Show selected tab content
+            const selectedTab = document.getElementById(tabId);
+            selectedTab.classList.remove('hidden');
+            // Trigger reflow to restart animation
+            void selectedTab.offsetWidth;
+            selectedTab.classList.add('tab-content-active');
+
+            // Reset tab button styles
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = "tab-btn px-4 py-2 rounded-lg text-xs font-semibold tracking-wide transition-all duration-300 flex items-center gap-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 whitespace-nowrap";
+            });
+            // Set active tab button style
+            const activeBtn = document.getElementById('btn-' + tabId);
+            if (activeBtn) {
+                activeBtn.className = "tab-btn px-4 py-2 rounded-lg text-xs font-semibold tracking-wide transition-all duration-300 flex items-center gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20 font-bold whitespace-nowrap";
+            }
+        }
+
+        // Seed initial data
+        async function seedInitialData() {
+            try {
+                const res = await fetch(`${API_URL}/api/seed`, {
+                    method: "POST"
+                });
+                if (res.ok) {
+                    appendLog("[System] Database seeded successfully with Judges, Teams, Projects, and bias-calibrated raw evaluations!");
+                    fetchData();
+                } else {
+                    const errText = await res.text();
+                    appendLog(`[System] Seeding failed: ${errText}`);
+                }
+            } catch (err) {
+                console.error("Seeding error:", err);
+                appendLog(`[System] Seeding error: ${err.message || err}`);
+            }
+        }
+
+        function clearLogs() {
+            document.getElementById("logs-container").innerHTML = "";
+        }
+
+        function appendLog(text) {
+            const container = document.getElementById("logs-container");
+            const logDiv = document.createElement("div");
+            logDiv.className = "flex gap-2 leading-relaxed";
+            logDiv.innerHTML = `<span class="text-slate-600">[${new Date().toLocaleTimeString()}]</span> <span>${text}</span>`;
+            container.appendChild(logDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Connect to SSE stream
+        function connectSSE() {
+            const es = new EventSource(`${API_URL}/api/streams/logs`);
+            
+            es.addEventListener("log", (e) => {
+                const data = JSON.parse(e.data);
+                appendLog(data.text);
+            });
+
+            es.addEventListener("state_update", (e) => {
+                const data = JSON.parse(e.data);
+                appendLog(data.text);
+                fetchData();
+            });
+
+            es.onerror = () => {
+                appendLog("[System] Log stream connection dropped. Reconnecting...");
+            };
+        }
+
+        async function submitProject(e) {
+            e.preventDefault();
+            const teamId = document.getElementById("sub-team-id").value;
+            const title = document.getElementById("sub-title").value;
+            const abstract = document.getElementById("sub-abstract").value;
+            const tech = document.getElementById("sub-tech").value;
+
+            try {
+                await fetch(`${API_URL}/api/teams/register`, {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name: `Team-${teamId}`, repo_url: `https://github.com/team-${teamId}` })
+                });
+
+                const res = await fetch(`${API_URL}/api/submissions/submit`, {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ team_id: parseInt(teamId), title, abstract, tech_stack: tech })
+                });
+
+                if (res.ok) {
+                    appendLog(`[Portal] Abstract submitted successfully: '${title}'`);
+                    document.getElementById("sub-title").value = "";
+                    document.getElementById("sub-abstract").value = "";
+                    fetchData();
+                } else {
+                    const err = await res.json();
+                    appendLog(`[Portal] ERROR: ${err.detail}`);
+                }
+            } catch (err) {
+                appendLog(`[Portal] ERROR: ${err}`);
+            }
+        }
+
+        async function submitScore(e) {
+            e.preventDefault();
+            const judgeId = document.getElementById("score-judge-id").value;
+            const projectId = document.getElementById("score-project-id").value;
+            const rawScore = document.getElementById("score-raw").value;
+
+            try {
+                const res = await fetch(`${API_URL}/api/scores/submit`, {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        judge_id: parseInt(judgeId),
+                        project_id: parseInt(projectId),
+                        criteria_scores: { innovation: parseFloat(rawScore) },
+                        raw_score: parseFloat(rawScore)
+                    })
+                });
+
+                if (res.ok) {
+                    appendLog(`[Portal] Score evaluation cast successfully.`);
+                    fetchData();
+                } else {
+                    const err = await res.json();
+                    appendLog(`[Portal] ERROR: ${err.detail}`);
+                }
+            } catch (err) {
+                appendLog(`[Portal] ERROR: ${err}`);
+            }
+        }
+
+        async function performHITL(id, action) {
+            try {
+                const res = await fetch(`${API_URL}/api/submissions/${id}/override`, {
+                    method: "PATCH", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action })
+                });
+                if (res.ok) {
+                    appendLog(`[HITL] Override action completed.`);
+                    fetchData();
+                }
+            } catch (err) {
+                appendLog(`[HITL] ERROR: ${err}`);
+            }
+        }
+
+        // Stepper Visual Controller
+        function updatePipelineVisual(latestProject, leaderboardCount) {
+            const steps = [
+                document.getElementById("step-1"),
+                document.getElementById("step-2"),
+                document.getElementById("step-3"),
+                document.getElementById("step-4"),
+                document.getElementById("step-5")
+            ];
+            const progressLine = document.getElementById("pipeline-progress-line");
+            const activeLabel = document.getElementById("active-project-label");
+
+            // Reset
+            steps.forEach(step => {
+                const circle = step.querySelector("div");
+                circle.className = "w-10 h-10 rounded-full bg-[#04060b] border border-white/[0.12] flex items-center justify-center text-xs font-bold text-slate-400 transition-all duration-300";
+            });
+            progressLine.style.width = "0%";
+            activeLabel.innerText = "No active execution state";
+
+            if (!latestProject) return;
+
+            activeLabel.innerText = `Active Project ID ${latestProject.id}: "${latestProject.title}" (${latestProject.state})`;
+
+            setStepState(steps[0], "completed", "accentSky");
+            progressLine.style.width = "25%";
+
+            if (latestProject.state === "PENDING_REVIEW") {
+                setStepState(steps[1], "active", "accentSky");
+            } else if (latestProject.state === "FLAGGED_DUPLICATE") {
+                setStepState(steps[1], "completed", "accentSky");
+                setStepState(steps[2], "active", "accentAmber");
+                progressLine.style.width = "50%";
+            } else if (latestProject.state === "APPROVED") {
+                setStepState(steps[1], "completed", "accentSky");
+                setStepState(steps[2], "completed", "accentEmerald");
+                setStepState(steps[3], "active", "accentSky");
+                progressLine.style.width = "75%";
+            } else if (latestProject.state === "MATCHED" || latestProject.state === "ENRICHED") {
+                setStepState(steps[1], "completed", "accentSky");
+                setStepState(steps[2], "completed", "accentEmerald");
+                setStepState(steps[3], "completed", "accentSky");
+                progressLine.style.width = "75%";
+
+                if (leaderboardCount > 0) {
+                    setStepState(steps[4], "completed", "accentEmerald");
+                    progressLine.style.width = "100%";
+                } else {
+                    setStepState(steps[4], "active", "accentSky");
+                }
+            }
+        }
+
+        function setStepState(element, state, colorClass) {
+            const circle = element.querySelector("div");
+            if (state === "completed") {
+                circle.className = `w-10 h-10 rounded-full bg-${colorClass}/10 border border-${colorClass} flex items-center justify-center text-xs font-bold text-${colorClass} transition-all duration-300`;
+            } else if (state === "active") {
+                let haloClass = "pulse-halo-sky";
+                if (colorClass.includes("Amber")) haloClass = "pulse-halo-amber";
+                if (colorClass.includes("Emerald")) haloClass = "pulse-halo-emerald";
+                circle.className = `w-10 h-10 rounded-full bg-${colorClass}/20 border-2 border-${colorClass} flex items-center justify-center text-xs font-bold text-${colorClass} transition-all duration-300 ${haloClass}`;
+            }
+        }
+
+        // Modals Actions
+        function viewAssets(email, promo) {
+            document.getElementById("assets-email").innerText = email || "Email is still being synthesized by the autonomous comm agent...";
+            document.getElementById("assets-promo").innerText = promo || "Social promo is still being synthesized by the autonomous marketing agent...";
+            document.getElementById("assets-modal").classList.remove("hidden");
+        }
+
+        function closeAssetsModal() {
+            document.getElementById("assets-modal").classList.add("hidden");
+        }
+
+        async function showWinnerModal() {
+            try {
+                const res = await fetch(`${API_URL}/api/analytics/winner`);
+                const data = await res.json();
+                
+                if (data.status !== "SUCCESS") {
+                    alert(data.message || "No scores submitted yet to compute winner.");
+                    return;
+                }
+                
+                const cert = data.certificate;
+                document.getElementById("cert-recipient").innerText = cert.recipient;
+                document.getElementById("cert-project").innerText = cert.reason;
+                document.getElementById("cert-score").innerText = cert.normalized_score;
+                document.getElementById("cert-hash").innerText = cert.verification_hash;
+                document.getElementById("cert-audit-trail").innerText = data.audit_trail;
+                
+                document.getElementById("winner-modal").classList.remove("hidden");
+            } catch (err) {
+                alert(`Error generating winner certificate: ${err}`);
+            }
+        }
+
+        function closeWinnerModal() {
+            document.getElementById("winner-modal").classList.add("hidden");
+        }
+
+        async function fetchData() {
+            try {
+                // Fetch submissions
+                const subRes = await fetch(`${API_URL}/api/submissions`);
+                const subs = await subRes.json();
+
+                // Fetch leaderboard
+                const leadRes = await fetch(`${API_URL}/api/leaderboard`);
+                const lead = await leadRes.json();
+
+                // Fetch audit logs
+                const auditRes = await fetch(`${API_URL}/api/audit-logs`);
+                const audits = await auditRes.json();
+
+                // Update metrics KPIs
+                document.getElementById("kpi-total-teams").innerText = subs.length;
+                
+                const flaggedCount = subs.filter(s => s.state === "FLAGGED_DUPLICATE").length;
+                document.getElementById("kpi-plagiarism-alerts").innerText = flaggedCount;
+                
+                let successSum = 0;
+                let successCount = 0;
+                subs.forEach(s => {
+                    if (s.predictive_success_score) {
+                        successSum += s.predictive_success_score;
+                        successCount++;
+                    }
+                });
+                const avgSuccess = successCount > 0 ? (successSum / successCount * 100).toFixed(1) : "0.0";
+                document.getElementById("kpi-success-health").innerText = `${avgSuccess}%`;
+
+                // Update Project select
+                const selectElement = document.getElementById("score-project-id");
+                selectElement.innerHTML = '<option value="">-- Select Project Submission --</option>';
+                subs.forEach(s => {
+                    if (s.state !== "FLAGGED_DUPLICATE" && s.state !== "BLOCKED") {
+                        selectElement.innerHTML += `<option value="${s.id}">ID ${s.id}: ${s.title}</option>`;
+                    }
+                });
+
+                // Update Pipeline Visual
+                const latestProject = subs.length > 0 ? subs[subs.length - 1] : null;
+                updatePipelineVisual(latestProject, lead.length);
+
+                // Update Leaderboard List
+                const leadContainer = document.getElementById("leaderboard-container");
+                leadContainer.innerHTML = "";
+                if (lead.length === 0) {
+                    leadContainer.innerHTML = '<p class="text-slate-400 italic p-4 text-center text-xs">No project evaluations registered.</p>';
+                } else {
+                    lead.forEach((item, idx) => {
+                        leadContainer.innerHTML += `
+                            <div class="bg-[#04060b] p-4 rounded-xl border border-white/[0.06] flex justify-between items-center text-sm interactive-card shadow-md animate-slide-in">
+                                <div>
+                                    <h3 class="font-extrabold text-white">#${idx + 1} ${item.title}</h3>
+                                    <p class="text-slate-400 text-xs mt-1">Evals: ${item.eval_count} &bull; State: <span class="text-accentSky font-bold">${item.state}</span></p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-accentEmerald font-extrabold text-base">${item.normalized_score}</p>
+                                    <p class="text-[10px] text-slate-400 mt-0.5">Raw Avg: ${item.raw_average}</p>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+
+                // 1. D&I Metrics Update
+                const biasAlerts = audits.filter(a => a.action === "BIAS_ALERT");
+                const dniHealth = Math.max(10, 100 - (biasAlerts.length * 15));
+                const dniHealthEl = document.getElementById("dni-fairness-health");
+                dniHealthEl.innerText = `${dniHealth}%`;
+                if (dniHealth >= 80) {
+                    dniHealthEl.className = "text-accentEmerald font-bold text-sm";
+                } else if (dniHealth >= 50) {
+                    dniHealthEl.className = "text-accentAmber font-bold text-sm";
+                } else {
+                    dniHealthEl.className = "text-accentRose font-bold text-sm";
+                }
+
+                let genderCount = 0;
+                let geoCount = 0;
+                subs.forEach(s => {
+                    const text = (s.title + " " + s.abstract).toLowerCase();
+                    if (["she", "her", "female", "women", "girl", "grace", "ada", "emily", "priya"].some(w => text.includes(w))) {
+                        genderCount++;
+                    }
+                    if (["india", "africa", "asia", "local", "regional", "global south", "developing"].some(w => text.includes(w))) {
+                        geoCount++;
+                    }
+                });
+                const genderRatio = subs.length > 0 ? ((genderCount / subs.length) * 100).toFixed(1) : "0.0";
+                const geoRatio = subs.length > 0 ? ((geoCount / subs.length) * 100).toFixed(1) : "0.0";
+                document.getElementById("dni-gender-ratio").innerText = `${genderRatio}%`;
+                document.getElementById("dni-geo-ratio").innerText = `${geoRatio}%`;
+
+                const dniContainer = document.getElementById("dni-alerts-container");
+                dniContainer.innerHTML = "";
+                if (biasAlerts.length === 0) {
+                    dniContainer.innerHTML = '<p class="text-slate-400 italic text-xs">No bias anomalies detected in evaluations.</p>';
+                } else {
+                    biasAlerts.forEach(alert => {
+                        dniContainer.innerHTML += `
+                            <div class="p-2.5 rounded-lg bg-red-500/[0.04] border border-red-500/20 text-accentRose mb-2 text-[10px] leading-normal animate-slide-in">
+                                <span class="font-bold">[Alert]</span> ${alert.details}
+                            </div>
+                        `;
+                    });
+                }
+
+                // 2. Team Formation & Skill Gap Analysis Update
+                const formationContainer = document.getElementById("team-formation-container");
+                formationContainer.innerHTML = "";
+                const recommendations = [];
+                subs.forEach(s => {
+                    if (s.state === "FLAGGED_DUPLICATE" || s.state === "BLOCKED") return;
+                    const skills = s.extracted_skills || [];
+                    const title = s.title;
+                    const teamId = s.team_id;
+                    const tech = s.tech_stack.toLowerCase();
+                    
+                    const hasFrontend = tech.includes("react") || tech.includes("next") || tech.includes("vue") || tech.includes("html") || tech.includes("css") || skills.includes("react") || skills.includes("next.js");
+                    const hasBackend = tech.includes("spring") || tech.includes("boot") || tech.includes("fastapi") || tech.includes("django") || tech.includes("express") || tech.includes("go") || skills.includes("go");
+                    const hasCloud = tech.includes("docker") || tech.includes("kubernetes") || tech.includes("aws") || tech.includes("cloud") || skills.includes("docker") || skills.includes("kubernetes");
+                    
+                    const missing = [];
+                    if (!hasFrontend) missing.push("Frontend (React/Next.js)");
+                    if (!hasBackend) missing.push("Backend API (FastAPI/Go)");
+                    if (!hasCloud) missing.push("DevOps/Cloud Deployment (Docker)");
+                    
+                    if (missing.length > 0) {
+                        const suggestions = [];
+                        subs.forEach(other => {
+                            if (other.id === s.id || other.state === "FLAGGED_DUPLICATE" || other.state === "BLOCKED") return;
+                            const otherTech = other.tech_stack.toLowerCase();
+                            const otherSkills = other.extracted_skills || [];
+                            
+                            let fits = false;
+                            missing.forEach(m => {
+                                if (m.startsWith("Frontend") && (otherTech.includes("react") || otherTech.includes("next") || otherSkills.includes("react") || otherSkills.includes("next.js"))) fits = true;
+                                if (m.startsWith("Backend") && (otherTech.includes("spring") || otherTech.includes("fastapi") || otherTech.includes("go") || otherSkills.includes("go"))) fits = true;
+                                if (m.startsWith("DevOps") && (otherTech.includes("docker") || otherTech.includes("kubernetes") || otherSkills.includes("docker") || otherSkills.includes("kubernetes"))) fits = true;
+                            });
+                            
+                            if (fits && suggestions.length < 2) {
+                                suggestions.push(`Team ${other.team_id} ('${other.title}')`);
+                            }
+                        });
+                        
+                        recommendations.push({
+                            teamId,
+                            title,
+                            missing,
+                            suggestions
+                        });
+                    }
+                });
+                
+                if (recommendations.length === 0) {
+                    formationContainer.innerHTML = '<p class="text-slate-400 italic text-center p-4">All teams have complete full-stack profiles.</p>';
+                } else {
+                    recommendations.forEach(rec => {
+                        const sugText = rec.suggestions.length > 0 
+                            ? `<span class="text-accentEmerald font-bold">Recommended Collaborators:</span> ${rec.suggestions.join(" or ")}`
+                            : '<span class="text-slate-400 italic">No complementary teams found yet.</span>';
+                            
+                        formationContainer.innerHTML += `
+                            <div class="bg-[#04060b] p-4 rounded-xl border border-white/[0.06] space-y-2 mb-3 shadow-md interactive-card animate-slide-in">
+                                <div class="flex justify-between items-center pb-1 border-b border-white/[0.03]">
+                                    <h4 class="font-extrabold text-white text-xs">Team ${rec.teamId} (${rec.title})</h4>
+                                    <span class="text-[9px] text-accentRose font-semibold bg-accentRose/10 border border-accentRose/20 px-2 py-0.5 rounded">Gaps Identified</span>
+                                </div>
+                                <p class="text-[10px] text-slate-300">
+                                    <span class="font-semibold text-accentAmber">Missing competencies:</span> ${rec.missing.join(", ")}
+                                </p>
+                                <p class="text-[10px] text-white">
+                                    ${sugText}
+                                </p>
+                            </div>
+                        `;
+                    });
+                }
+
+                // Update HITL list
+                const flagged = subs.filter(s => s.state === "FLAGGED_DUPLICATE");
+                const hitlBanner = document.getElementById("hitl-banner");
+                const hitlList = document.getElementById("hitl-list");
+                
+                if (flagged.length === 0) {
+                    hitlBanner.classList.add("hidden");
+                } else {
+                    hitlBanner.classList.remove("hidden");
+                    hitlList.innerHTML = "";
+                    flagged.forEach(s => {
+                        hitlList.innerHTML += `
+                            <div class="p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-sm hover:bg-white/[0.02] transition animate-slide-in">
+                                <div class="space-y-1">
+                                    <h4 class="font-extrabold text-white">${s.title}</h4>
+                                    <p class="text-slate-300 text-xs max-w-2xl leading-relaxed">${s.abstract}</p>
+                                </div>
+                                <div class="flex gap-2 w-full md:w-auto">
+                                    <button onclick="performHITL(${s.id}, 'APPROVE_OVERRIDE')" class="btn-modern flex-1 md:flex-none px-4 py-2 bg-accentEmerald hover:bg-emerald-400 rounded-lg text-slate-950 font-bold text-xs">Approve</button>
+                                    <button onclick="performHITL(${s.id}, 'CONFIRM_DISQUALIFICATION')" class="btn-modern flex-1 md:flex-none px-4 py-2 bg-accentRose hover:bg-rose-400 rounded-lg text-slate-950 font-bold text-xs">Disqualify</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+
+                // Update Registry table
+                const active = subs.filter(s => s.state !== "FLAGGED_DUPLICATE");
+                const regContainer = document.getElementById("registry-rows");
+                regContainer.innerHTML = "";
+                if (active.length === 0) {
+                    regContainer.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-slate-400 italic">No unique submissions registered.</td></tr>';
+                } else {
+                    active.forEach(s => {
+                        let badgeClass = "bg-slate-800 text-slate-400 border border-white/[0.08]";
+                        if (s.state === "APPROVED") {
+                            badgeClass = "bg-accentEmerald/10 text-accentEmerald border border-accentEmerald/20 shadow-sm";
+                        } else if (s.state === "MATCHED" || s.state === "ENRICHED") {
+                            badgeClass = "bg-accentSky/10 text-accentSky border border-accentSky/20 shadow-sm";
+                        }
+                        
+                        const skills = s.extracted_skills && s.extracted_skills.length > 0
+                            ? s.extracted_skills.map(x => `<span class="bg-[#04060b] text-accentSky text-[9px] border border-white/[0.06] px-2 py-0.5 rounded-md font-mono font-bold">${x}</span>`).join(' ')
+                            : `<span class="text-slate-500 italic text-[10px]">Processing...</span>`;
+                            
+                        const health = s.predictive_success_score
+                            ? `<span class="text-accentEmerald font-bold">${(s.predictive_success_score * 100).toFixed(1)}%</span>`
+                            : `<span class="text-slate-500 italic text-[10px]">Calculating...</span>`;
+                            
+                        const emailEscaped = s.generated_email ? s.generated_email.replace(/`/g, "\\`").replace(/'/g, "\\'") : "";
+                        const promoEscaped = s.generated_promo ? s.generated_promo.replace(/`/g, "\\`").replace(/'/g, "\\'") : "";
+                        
+                        const assetsBtn = (s.generated_email || s.generated_promo)
+                            ? `<button onclick="viewAssets(\`${emailEscaped}\`, \`${promoEscaped}\`)" class="text-accentSky hover:text-sky-350 transition font-bold text-xs tracking-tight">View Assets</button>`
+                            : `<span class="text-slate-500 italic text-[10px]">Processing...</span>`;
+
+                        regContainer.innerHTML += `
+                            <tr class="hover:bg-white/[0.02] transition">
+                                <td class="py-4 px-4 font-mono text-xs text-slate-400">${s.id}</td>
+                                <td class="py-4 px-4">
+                                    <div class="font-bold text-white text-sm">${s.title}</div>
+                                    <div class="flex flex-wrap gap-1.5 mt-2">${skills}</div>
+                                </td>
+                                <td class="py-4 px-4 text-slate-300 text-xs max-w-xs truncate" title="${s.abstract}">${s.abstract}</td>
+                                <td class="py-4 px-4">
+                                    <div class="text-xs font-semibold text-white">${s.tech_stack}</div>
+                                    <div class="text-[10px] text-slate-400 mt-1.5">Predictive Success: ${health}</div>
+                                </td>
+                                <td class="py-4 px-4">
+                                    <div class="flex flex-col items-start gap-2">
+                                        <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full ${badgeClass}">${s.state}</span>
+                                        ${assetsBtn}
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+
+                // Update Results Leaderboard (Winner Tab)
+                const resLeadContainer = document.getElementById("results-leaderboard-container");
+                resLeadContainer.innerHTML = "";
+                if (lead.length === 0) {
+                    resLeadContainer.innerHTML = '<p class="text-slate-400 italic p-4 text-center text-xs">No project evaluations registered.</p>';
+                } else {
+                    lead.forEach((item, idx) => {
+                        let tieHtml = "";
+                        if (item.tie_broken) {
+                            tieHtml = `
+                                <div class="mt-2 text-[9px] bg-accentAmber/10 border border-accentAmber/30 rounded-lg px-2.5 py-1.5 text-accentAmber flex items-center gap-1.5 animate-pulse">
+                                    <span>⚠️ Tie-Breaker Applied:</span>
+                                    <span class="font-bold">${item.tie_break_reason}</span>
+                                </div>
+                            `;
+                        }
+                        
+                        resLeadContainer.innerHTML += `
+                            <div class="bg-[#04060b] p-4 rounded-xl border border-white/[0.06] space-y-3 text-sm interactive-card shadow-md animate-slide-in">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <h3 class="font-extrabold text-white">#${idx + 1} ${item.title}</h3>
+                                        <p class="text-slate-400 text-[10px] mt-1">Evals: ${item.eval_count} &bull; Margin of Error: &plusmn;${item.variance ? (1.96 * Math.sqrt(item.variance) / Math.sqrt(item.eval_count)).toFixed(2) : "0.00"}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-accentEmerald font-extrabold text-base">${item.normalized_score.toFixed(2)}</p>
+                                        <div class="text-[9px] text-slate-400 mt-1 font-mono">CI: [${item.ci_lower.toFixed(2)} - ${item.ci_upper.toFixed(2)}]</div>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between items-center text-[10px] pt-2 border-t border-white/[0.04]">
+                                    <span class="text-slate-400">Statistical Rank Confidence:</span>
+                                    <span class="font-bold text-accentSky">${item.confidence_score.toFixed(1)}%</span>
+                                </div>
+                                ${tieHtml}
+                            </div>
+                        `;
+                    });
+                }
+
+                // Update feedback selector options
+                const feedbackSelect = document.getElementById("feedback-project-select");
+                const currentFeedbackVal = feedbackSelect.value;
+                feedbackSelect.innerHTML = '<option value="">-- Select Project Submission --</option>';
+                subs.forEach(s => {
+                    if (s.state !== "FLAGGED_DUPLICATE" && s.state !== "BLOCKED") {
+                        feedbackSelect.innerHTML += `<option value="${s.id}">ID ${s.id}: ${s.title}</option>`;
+                    }
+                });
+                if (currentFeedbackVal) {
+                    feedbackSelect.value = currentFeedbackVal;
+                }
+
+                // Sync announcements
+                fetchAnnouncementContent();
+                // Sync status
+                fetchEvaluationStatus();
+
+            } catch (err) {
+                console.error("Fetch error:", err);
+            }
+        }
+
+        // Global variables for configuration
+        let announcementData = null;
+        let currentAnnouncementTab = 'email';
+
+        // Fetch criteria configuration
+        async function fetchCriteriaWeights() {
+            try {
+                const res = await fetch(`${API_URL}/api/config/criteria`);
+                const data = await res.json();
+                const container = document.getElementById("criteria-weights-container");
+                container.innerHTML = "";
+                
+                if (data.length === 0) {
+                    const defaults = [
+                        { name: "Innovation", weight: 0.40, description: "Creativity and uniqueness of the AI solution" },
+                        { name: "Feasibility", weight: 0.30, description: "Completeness and operational viability of the prototype" },
+                        { name: "Technical Complexity", weight: 0.30, description: "Depth of tech stack and algorithms utilized" }
+                    ];
+                    defaults.forEach(c => renderCriteriaRow(container, c.name, c.weight, c.description));
+                } else {
+                    data.forEach(c => renderCriteriaRow(container, c.name, c.weight, c.description));
+                }
+            } catch (err) {
+                console.error("Error fetching criteria:", err);
+            }
+        }
+
+        function renderCriteriaRow(container, name, weight, description) {
+            container.innerHTML += `
+                <div class="flex items-center gap-3 bg-[#04060b] p-3 rounded-xl border border-white/[0.06] shadow-sm animate-slide-in">
+                    <div class="flex-1">
+                        <span class="text-xs font-bold text-white">${name}</span>
+                        <p class="text-[10px] text-slate-400 mt-0.5">${description || ''}</p>
+                    </div>
+                    <div class="w-24">
+                        <input type="number" step="0.05" min="0" max="1.0" class="criteria-weight-input w-full px-3 py-1.5 rounded-lg text-right text-xs font-mono font-bold" data-name="${name}" value="${weight}">
+                    </div>
+                </div>
+            `;
+        }
+
+        async function saveCriteriaWeights() {
+            const inputs = document.querySelectorAll(".criteria-weight-input");
+            const criteriaList = [];
+            let total = 0;
+            inputs.forEach(input => {
+                const name = input.getAttribute("data-name");
+                const weight = parseFloat(input.value) || 0;
+                total += weight;
+                criteriaList.push({ name, weight });
+            });
+
+            if (total === 0) {
+                alert("Total weight must be greater than zero.");
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/api/config/criteria`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(criteriaList)
+                });
+                if (res.ok) {
+                    appendLog("[System] Evaluation criteria configuration saved. Standings updated.");
+                    fetchData();
+                    fetchCriteriaWeights();
+                } else {
+                    const err = await res.json();
+                    alert(`Failed to save configuration: ${err.detail}`);
+                }
+            } catch (err) {
+                alert(`Error saving criteria: ${err}`);
+            }
+        }
+
+        async function fetchEvaluationStatus() {
+            try {
+                const res = await fetch(`${API_URL}/api/config/status`);
+                const data = await res.json();
+                updateEvaluationStatusUI(data.evaluation_closed);
+            } catch (err) {
+                console.error("Error fetching status:", err);
+            }
+        }
+
+        function updateEvaluationStatusUI(isClosed) {
+            const badge = document.getElementById("eval-status-badge");
+            const btn = document.getElementById("btn-toggle-eval");
+            if (isClosed) {
+                badge.innerText = "Scoring Locked";
+                badge.className = "bg-accentRose/10 text-accentRose border border-accentRose/20 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider";
+                btn.innerText = "Open Evaluations";
+                btn.className = "px-3 py-1.5 bg-accentEmerald text-background hover:bg-emerald-450 active:scale-95 transition rounded text-xs font-bold shadow";
+            } else {
+                badge.innerText = "Scoring Open";
+                badge.className = "bg-accentEmerald/10 text-accentEmerald border border-accentEmerald/20 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider";
+                btn.innerText = "Close Evaluations";
+                btn.className = "px-3 py-1.5 bg-accentRose text-slate-900 hover:bg-rose-400 active:scale-95 transition rounded text-xs font-bold shadow";
+            }
+        }
+
+        async function toggleEvaluationStatus() {
+            const badge = document.getElementById("eval-status-badge");
+            const currentClosed = badge.innerText === "Scoring Locked";
+            try {
+                const res = await fetch(`${API_URL}/api/config/status`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ evaluation_closed: !currentClosed })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    updateEvaluationStatusUI(data.evaluation_closed);
+                    appendLog(`[System] Evaluations are now ${data.evaluation_closed ? 'CLOSED & LOCKED' : 'OPENED FOR SCORING'}.`);
+                    fetchData();
+                }
+            } catch (err) {
+                alert(`Error toggling status: ${err}`);
+            }
+        }
+
+        async function runLedgerVerification() {
+            const output = document.getElementById("ledger-verification-output");
+            output.innerHTML = "<div>Running cryptographic check...</div>";
+            try {
+                const res = await fetch(`${API_URL}/api/audit-logs/verify`);
+                const data = await res.json();
+                
+                const badge = document.getElementById("ledger-health-badge");
+                const statusText = document.getElementById("ledger-status");
+                const blocksCount = document.getElementById("ledger-blocks");
+                
+                blocksCount.innerText = data.verified_blocks;
+                
+                if (data.is_valid) {
+                    badge.innerText = "Chain Verified";
+                    badge.className = "bg-accentEmerald/10 text-accentEmerald border border-accentEmerald/20 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider font-mono";
+                    statusText.innerText = "SECURE & HEALTHY";
+                    statusText.className = "text-accentEmerald font-bold";
+                    output.innerHTML = `<div class="text-accentEmerald">✓ Integrity Verified: All ${data.verified_blocks} blocks are cryptographically linked and correct.</div>`;
+                    appendLog(`[Blockchain] Verified all ${data.verified_blocks} blocks in audit trail ledger. Chain is healthy.`);
+                } else {
+                    badge.innerText = "Chain Corrupted";
+                    badge.className = "bg-accentRose/10 text-accentRose border border-accentRose/20 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider font-mono";
+                    statusText.innerText = "MUTATED / CORRUPT";
+                    statusText.className = "text-accentRose font-bold";
+                    output.innerHTML = "";
+                    data.errors.forEach(err => {
+                        output.innerHTML += `<div class="text-accentRose">✗ ${err}</div>`;
+                    });
+                    appendLog("[Blockchain] ERROR: Cryptographic ledger validation failed! Mutation detected.");
+                }
+            } catch (err) {
+                output.innerHTML = `<div class="text-accentRose">Error verifying: ${err.message || err}</div>`;
+            }
+        }
+
+        async function fetchProjectFeedback() {
+            const select = document.getElementById("feedback-project-select");
+            const projectId = select.value;
+            const container = document.getElementById("feedback-report-container");
+            
+            if (!projectId) {
+                container.innerHTML = '<p class="text-inkMuted italic text-center pt-8">Select a project to generate and audit its detailed feedback report.</p>';
+                return;
+            }
+            
+            container.innerHTML = '<div>Generating AI feedback report...</div>';
+            try {
+                const res = await fetch(`${API_URL}/api/submissions/${projectId}/feedback`);
+                const data = await res.json();
+                
+                if (data.status === "AWAITING_EVALUATIONS") {
+                    container.innerHTML = `<p class="text-accentAmber italic text-center pt-8">${data.message}</p>`;
+                    return;
+                }
+                
+                let avgHtml = "";
+                for (const [criteria, score] of Object.entries(data.averages)) {
+                    avgHtml += `
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-slate-400 capitalize">${criteria}:</span>
+                            <span class="font-bold text-white">${score.toFixed(1)}/10.0</span>
+                        </div>
+                    `;
+                }
+                
+                let strengthsHtml = "";
+                data.strengths.forEach(s => {
+                    strengthsHtml += `<li class="ml-4 list-disc text-slate-200">${s}</li>`;
+                });
+                
+                let improvementsHtml = "";
+                data.improvements.forEach(imp => {
+                    improvementsHtml += `<li class="ml-4 list-disc text-slate-400">${imp}</li>`;
+                });
+                
+                let judgeHtml = "";
+                data.judge_insights.forEach(insight => {
+                    judgeHtml += `
+                        <div class="bg-[#020408] p-3 rounded-lg border border-white/[0.04] text-[11px] mb-2 leading-relaxed">
+                            <div class="flex justify-between font-bold pb-1 text-accentSky">
+                                <span>${insight.judge_role}</span>
+                                <span>Score: ${insight.score_cast}</span>
+                            </div>
+                            <p class="text-slate-350 italic">"${insight.recommendation}"</p>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = `
+                    <div class="space-y-4 animate-slide-in">
+                        <div>
+                            <div class="flex justify-between items-start">
+                                <h3 class="text-sm font-extrabold text-accentSky">${data.title}</h3>
+                                <span class="bg-accentEmerald/10 text-accentEmerald border border-accentEmerald/20 text-[9px] font-bold px-2 py-0.5 rounded-md font-mono">Rank #${data.rank}</span>
+                            </div>
+                            <p class="text-[10px] text-slate-400 mt-1">Percentile standing: Top ${data.percentile}% of submissions</p>
+                        </div>
+                        
+                        <div class="border-t border-white/[0.05] pt-3 space-y-2">
+                            <h4 class="font-bold text-white uppercase tracking-wider text-[10px]">Comparative Criteria Breakdown</h4>
+                            <div class="bg-[#020408] p-3.5 rounded-lg border border-white/[0.04] space-y-1">
+                                ${avgHtml}
+                            </div>
+                        </div>
+
+                        <div class="border-t border-white/[0.05] pt-3 space-y-2">
+                            <h4 class="font-bold text-white uppercase tracking-wider text-[10px]">Key Strengths</h4>
+                            <ul class="space-y-1">${strengthsHtml}</ul>
+                        </div>
+
+                        <div class="border-t border-white/[0.05] pt-3 space-y-2">
+                            <h4 class="font-bold text-accentAmber uppercase tracking-wider text-[10px]">Opportunities for Improvement</h4>
+                            <ul class="space-y-1">${improvementsHtml}</ul>
+                        </div>
+
+                        <div class="border-t border-white/[0.05] pt-3 space-y-2">
+                            <h4 class="font-bold text-white uppercase tracking-wider text-[10px]">Individual Judge Recommendations</h4>
+                            <div>${judgeHtml}</div>
+                        </div>
+                        
+                        <div class="border-t border-white/[0.05] pt-3 text-[10px] text-slate-400 italic leading-normal">
+                            ${data.overall_summary}
+                        </div>
+                        
+                        <button onclick="downloadFeedbackReport(${data.project_id})" class="btn-modern w-full py-2.5 bg-accentEmerald hover:bg-emerald-450 text-slate-950 font-bold text-xs rounded-xl shadow-md uppercase tracking-wider">
+                            📥 Download Feedback Report (.TXT)
+                        </button>
+                    </div>
+                `;
+            } catch (err) {
+                container.innerHTML = `<div class="text-accentRose">Error generating report: ${err}</div>`;
+            }
+        }
+
+        async function downloadFeedbackReport(projectId) {
+            try {
+                const res = await fetch(`${API_URL}/api/submissions/${projectId}/feedback`);
+                const data = await res.json();
+                
+                let text = `====================================================\n`;
+                text += `      DELL FUTURE MINDS AI HACKATHON 2026\n`;
+                text += `        PARTICIPANT FEEDBACK REPORT\n`;
+                text += `====================================================\n\n`;
+                text += `Project Title:   "${data.title}"\n`;
+                text += `Team ID:         Team ${data.team_id}\n`;
+                text += `Final Standing:  Rank #${data.rank} (Top ${data.percentile}%)\n`;
+                text += `Normalized Score: ${data.normalized_score.toFixed(2)}/10.0\n\n`;
+                text += `----------------------------------------------------\n`;
+                text += `CRITERIA SCORE BREAKDOWN\n`;
+                text += `----------------------------------------------------\n`;
+                for (const [c, val] of Object.entries(data.averages)) {
+                    text += `${c.toUpperCase().padEnd(20)}: ${val.toFixed(1)}/10.0\n`;
+                }
+                text += `\n----------------------------------------------------\n`;
+                text += `KEY STRENGTHS\n`;
+                text += `----------------------------------------------------\n`;
+                data.strengths.forEach(s => {
+                    text += `- ${s.replace(/\*\*/g, '')}\n`;
+                });
+                text += `\n----------------------------------------------------\n`;
+                text += `OPPORTUNITIES FOR IMPROVEMENT\n`;
+                text += `----------------------------------------------------\n`;
+                data.improvements.forEach(imp => {
+                    text += `- ${imp.replace(/\*\*/g, '')}\n`;
+                });
+                text += `\n----------------------------------------------------\n`;
+                text += `INDIVIDUAL JUDGE COMMENTS & EXPERT FEEDBACK\n`;
+                text += `----------------------------------------------------\n`;
+                data.judge_insights.forEach(insight => {
+                    text += `* ${insight.judge_role} (Score: ${insight.score_cast}):\n`;
+                    text += `  "${insight.recommendation}"\n\n`;
+                });
+                text += `----------------------------------------------------\n`;
+                text += `AUDIT OVERALL SUMMARY\n`;
+                text += `----------------------------------------------------\n`;
+                text += `${data.overall_summary}\n\n`;
+                text += `Report generated autonomously by Dell Agentic OS Engine.`;
+                
+                const blob = new Blob([text], { type: "text/plain" });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = `Feedback_Report_Team_${data.team_id}.txt`;
+                link.click();
+            } catch (err) {
+                alert(`Error downloading report: ${err}`);
+            }
+        }
+
+        async function fetchAnnouncementContent() {
+            try {
+                const res = await fetch(`${API_URL}/api/analytics/announcements`);
+                const data = await res.json();
+                if (data.status === "SUCCESS") {
+                    announcementData = data;
+                    renderAnnouncementText();
+                } else {
+                    document.getElementById("announcement-content-box").innerText = "Awaiting final scores to generate winner announcements...";
+                }
+            } catch (err) {
+                console.error("Error fetching announcements:", err);
+            }
+        }
+
+        function renderAnnouncementText() {
+            const container = document.getElementById("announcement-content-box");
+            if (!announcementData) {
+                container.innerText = "Awaiting finalized standing data...";
+                return;
+            }
+            container.innerText = announcementData[currentAnnouncementTab] || "";
+        }
+
+        function switchAnnouncementTab(tab) {
+            currentAnnouncementTab = tab;
+            document.querySelectorAll(".ann-tab-btn").forEach(btn => {
+                btn.className = "ann-tab-btn py-2 bg-[#05080f] border border-border text-inkMuted hover:text-ink font-bold text-xs rounded transition flex items-center justify-center gap-1.5";
+            });
+            const activeBtn = document.getElementById(`btn-ann-${tab}`);
+            if (activeBtn) {
+                activeBtn.className = "ann-tab-btn py-2 bg-blue-900 border border-blue-700 text-white font-bold text-xs rounded transition flex items-center justify-center gap-1.5 shadow";
+            }
+            renderAnnouncementText();
+        }
+
+        function copyAnnouncementCopy() {
+            const textContent = document.getElementById("announcement-content-box").innerText;
+            if (!textContent) return;
+            navigator.clipboard.writeText(textContent).then(() => {
+                alert("Announcement template copied to clipboard!");
+            }).catch(err => {
+                alert("Failed to copy text: " + err);
+            });
+        }
+
+        // Init
+        switchTab('tab-dashboard');
+        connectSSE();
+        fetchData();
+        fetchCriteriaWeights();
+    </script>
+</body>
+</html>
